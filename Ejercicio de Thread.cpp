@@ -1,18 +1,20 @@
-#include <iostream> // Para imprimir en consola
-#include <thread>   // Para usar hilos
-#include <mutex>    // Para proteger la impresion
-#include <vector>   //Para usar vectores
-#include <random>   // Para generar numeros aleatorios
+#include <iostream>  // Para imprimir en consola
+#include <thread>    // Para usar hilos
+#include <mutex>     // Para proteger la impresion
+#include <vector>    //Para usar vectores
+#include <random>    // Para generar numeros aleatorios
+#include <algorithm> // Para std::max_element
+#include <iterator>  // Para std::distance
 
-std::mutex cout_mutex; // Mutex global para proteger std::cout
+std::mutex cout_mutex;                        // Mutex global para proteger std::cout
+std::random_device rd;                        // Fuente de entropia para el generador aleatorio
+std::mt19937 gen(rd());                       // Generador de numeros aleatorios
+std::uniform_int_distribution<> dis(1, 1000); // Distribucion uniforme entre 1 y 1000
 
 // Función que suma 100 números aleatorios entre 1 y 1000 en un hilo
 void sum_random_numbers(int thread_id, int &result)
 {
-    std::random_device rd;                        // Fuente de entropia para el generador aleatorio
-    std::mt19937 gen(rd());                       // Generador de numeros aleatorios
-    std::uniform_int_distribution<> dis(1, 1000); // Distribucion uniforme entre 1 y 1000
-    int sum = 0;                                  // guarda la suma
+    int sum = 0; // guarda la suma
     for (int i = 0; i < 100; i++)
     {
         sum += dis(gen); // suma numero aleatorio del rango dado a sum
@@ -42,16 +44,10 @@ int main()
         t.join(); // Espera a que el hilo termine
     }
 
-    int max_sum = results[0]; // Inicializa la suma maxima con el primer resultado
-    int max_thread = 0;       // indice del hilo con la suma maxima
-    for (int i = 0; i < num_threads; i++)
-    {
-        if (results[i] > max_sum) // si encuentra una suma mayor
-        {
-            max_sum = results[i]; // Actualiza la suma maxima
-            max_thread = i;       // Actualiza el indice del hilo
-        }
-    }
+    // Usar std::max_element para encontrar el valor máximo y su índice
+    auto max_it = std::max_element(results.begin(), results.end()); // Encuentra el iterador al elemento máximo
+    int max_sum = *max_it;                                          // Obtiene el valor máximo
+    int max_thread = std::distance(results.begin(), max_it);        // Obtiene el índice del elemento máximo
 
     // imprime el hilo con la suma mas alta
     std::cout << "\nEl thread con la puntacion más alta es el " << max_thread << " con suma = " << max_sum << std::endl;
